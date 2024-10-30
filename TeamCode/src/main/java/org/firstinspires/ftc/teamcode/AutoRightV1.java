@@ -24,17 +24,13 @@ package org.firstinspires.ftc.teamcode;
 
 import com.qualcomm.hardware.rev.RevHubOrientationOnRobot;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
-import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 import com.qualcomm.robotcore.hardware.CRServo;
 import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.hardware.DcMotorEx;
-import com.qualcomm.robotcore.hardware.DcMotorSimple;
 import com.qualcomm.robotcore.hardware.IMU;
 import com.qualcomm.robotcore.hardware.Servo;
-import com.qualcomm.robotcore.eventloop.opmode.Disabled;
 import com.qualcomm.robotcore.util.ElapsedTime;
 import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
-import java.util.List;
 
 import org.firstinspires.ftc.robotcore.external.navigation.AngleUnit;
 import org.firstinspires.ftc.robotcore.external.navigation.CurrentUnit;
@@ -62,9 +58,9 @@ import org.firstinspires.ftc.robotcore.external.navigation.CurrentUnit;
  */
 
 
-//@TeleOp(name="ARM_TeleOp2425", group="Robot")
+@Autonomous(name="AutoRightV1", group="Robot")
 //@Disabled
-public class ARM_TeleOp2425 extends LinearOpMode {
+public class AutoRightV1 extends LinearOpMode {
 
     /* Declare OpMode members. */
     public DcMotor  leftFrontDrive   = null; //the left drivetrain motor
@@ -143,6 +139,8 @@ public class ARM_TeleOp2425 extends LinearOpMode {
 
     double armLiftComp = 0;
 
+    private ElapsedTime timer = new ElapsedTime(ElapsedTime.Resolution.SECONDS);
+
 
     @Override
     public void runOpMode() {
@@ -220,12 +218,16 @@ public class ARM_TeleOp2425 extends LinearOpMode {
         // Without this, the REV Hub's orientation is assumed to be logo up / USB forward
         imu.initialize(parameters);
         /* Wait for the game driver to press play */
-        private ElapsedTime timer = new ElapsedTime(ElapsedTime.Resolution.SECONDS);
         waitForStart();
         timer.reset();
 
+        leftFrontDrive.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
+        leftBackDrive.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
+        rightFrontDrive.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
+        rightBackDrive.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
+
         /* Run until the driver presses stop */
-       while (opModeIsActive())
+       if (opModeIsActive())
 
        {
            double botHeading = imu.getRobotYawPitchRollAngles().getYaw(AngleUnit.RADIANS);
@@ -235,15 +237,26 @@ public class ARM_TeleOp2425 extends LinearOpMode {
            rightFrontDrive.setPower(0);
            rightBackDrive.setPower(0);
 
-           intake.setPower(INTAKE_COLLECT);
+           intake.setPower(INTAKE_OFF);
            wrist.setPosition(WRIST_FOLDED_IN);
            armPosition = ARM_COLLAPSED_INTO_ROBOT;
-
 
             armMotor.setTargetPosition((int) (armPosition + armLiftComp));
 
             ((DcMotorEx) armMotor).setVelocity(2100);
             armMotor.setMode(DcMotor.RunMode.RUN_TO_POSITION);
+
+           while (timer.seconds() < 3){
+               leftFrontDrive.setPower(0.5);
+               leftBackDrive.setPower(-0.5);
+               rightFrontDrive.setPower(-0.5);
+               rightBackDrive.setPower(0.5);
+
+           }
+           leftFrontDrive.setPower(0);
+           leftBackDrive.setPower(0);
+           rightFrontDrive.setPower(0);
+           rightBackDrive.setPower(0);
 
             /* Check to see if our arm is over the current limit, and report via telemetry. */
             if (((DcMotorEx) armMotor).isOverCurrent()){
